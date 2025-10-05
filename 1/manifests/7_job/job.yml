@@ -5,7 +5,7 @@ metadata:
   name: hello
 spec:
   backoffLimit: 2
-  activeDeadlineSeconds: 30
+  activeDeadlineSeconds: 45
   template:
     spec:
       containers:
@@ -14,6 +14,6 @@ spec:
         args:
           - /bin/sh
           - -c
-          - date; echo Hello from the Kubernetes cluster
+          - while true; do date; echo Hello from the Kubernetes cluster; sleep 1; done
       restartPolicy: Never
 
