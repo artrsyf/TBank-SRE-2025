@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: whoami-app-config
+data:
+  default.conf: |
+    server {
+      listen       80 default_server;
+      server_name  _;
+
+      default_type text/plain;
+
+      location / {
+          return 200 'You are Fadeev Roman from AB-1';
+      }
+    }
