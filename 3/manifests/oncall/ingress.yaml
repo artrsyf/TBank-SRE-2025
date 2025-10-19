@@ -9,7 +9,7 @@ metadata:
 spec:
   ingressClassName: nginx
   rules:
-    - host: oncall.$KUBE_NS.ingress.sre-ab.ru
+    - host: oncall.st-ab1-fadeev.ingress.sre-ab.ru
       http:
         paths:
           - path: "/"

@@ -10,7 +10,7 @@ data:
       host: 0.0.0.0
       port: 8080
     debug: True
-    oncall_host: oncall.$KUBE_NS.ingress.sre-ab.ru
+    oncall_host: oncall.st-ab1-fadeev.ingress.sre-ab.ru
     metrics: dummy
     db:
       conn:
@@ -41,7 +41,7 @@ data:
         iris_api_key: magic
 
     allow_origins_list:
-     - http://oncall.$KUBE_NS.ingress.sre-ab.ru
+     - http://oncall.st-ab1-fadeev.ingress.sre-ab.ru
 
     supported_timezones:
       - 'US/Pacific'
