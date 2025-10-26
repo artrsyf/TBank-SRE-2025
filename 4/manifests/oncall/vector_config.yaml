@@ -1,0 +1,50 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: vector-config
+data:
+  vector.toml: |
+    [sources.nginx_logs]
+      type = "file"
+      include = ["/home/oncall/var/log/nginx/*.log"]
+      ignore_older = 86400
+      read_from = "beginning"
+
+    [sources.uwsgi_logs]
+      type = "file"
+      include = ["/home/oncall/var/log/uwsgi/*.log"]
+      ignore_older = 86400
+      read_from = "beginning"
+
+    [transforms.parse_nginx]
+      type = "remap"
+      inputs = ["nginx_logs"]
+      source = '''
+        .message = parse_regex!(.message, r'^(?P<line>.*)$')
+        .timestamp = now()
+      '''
+
+    [transforms.parse_uwsgi]
+      type = "remap"
+      inputs = ["uwsgi_logs"]
+      source = '''
+        .message = parse_regex!(.message, r'^(?P<line>.*)$')
+        .timestamp = now()
+      '''
+
+    [transforms.to_json]
+    type = "remap"
+    inputs = ["parse_nginx", "parse_uwsgi"]
+    source = '''
+      . = {
+        "timestamp": .timestamp,
+        "message": .message.line,
+        "env": "${ENV-default}",
+        "system": "oncall"
+      }
+    '''
+
+    [sinks.stdout]
+      type = "console"
+      inputs = ["to_json"]
+      encoding.codec = "json"
