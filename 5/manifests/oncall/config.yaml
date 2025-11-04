@@ -10,7 +10,10 @@ data:
       port: 8080
     debug: True
     oncall_host: oncall.st-ab1-fadeev.ingress.sre-ab.ru
-    metrics: dummy
+    metrics: prometheus
+    prometheus:
+      oncall-notifier:
+        server_port: 9000
     db:
       conn:
         kwargs:

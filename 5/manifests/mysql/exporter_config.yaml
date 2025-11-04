@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mysql-exporter-cnf
+data:
+  config.my-cnf: |
+    [client]
+    user = exporter
+    password = password
+    host = 127.0.0.1
