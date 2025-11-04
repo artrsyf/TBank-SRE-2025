@@ -1,0 +1,118 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: oncall
+  labels:
+    app.kubernetes.io/name: oncall
+    app.kubernetes.io/component: web
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: oncall
+      app.kubernetes.io/component: web
+  template:
+    metadata:
+      annotations:
+        sage/group: "ab1_fadeev"
+      labels:
+        app.kubernetes.io/name: oncall
+        app.kubernetes.io/component: web
+    spec:
+      initContainers:
+        - name: fix-log-permissions
+          image: busybox:1.36
+          command:
+            - sh
+            - -c
+            - >
+              mkdir -p /home/oncall/var/log/nginx /home/oncall/var/log/uwsgi && 
+              chown -R 1000:1000 /home/oncall/var/log/nginx /home/oncall/var/log/uwsgi
+          volumeMounts:
+            - name: nginx-logs
+              mountPath: /home/oncall/var/log/nginx
+            - name: uwsgi-logs
+              mountPath: /home/oncall/var/log/uwsgi
+
+      containers:
+        - name: oncall
+          image: knucksie/sre-ab-oncall:0.1
+          env:
+            - name: DOCKER_DB_BOOTSTRAP
+              value: "1"
+          envFrom:
+            - secretRef:
+                name: oncall-secrets
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+          livenessProbe:
+            httpGet:
+              path: /healthcheck
+              port: 8080
+            failureThreshold: 3
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /healthcheck
+              port: 8080
+            failureThreshold: 3
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          startupProbe:
+            httpGet:
+              path: /healthcheck
+              port: 8080
+            failureThreshold: 10
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: "200m"
+              memory: "256Mi"
+            limits:
+              cpu: "400m"
+              memory: "512Mi"
+          volumeMounts:
+            - name: oncall-config
+              mountPath: /home/oncall/config/config.yaml
+              subPath: oncall.conf
+              readOnly: true
+            - name: nginx-logs
+              mountPath: /home/oncall/var/log/nginx
+            - name: uwsgi-logs
+              mountPath: /home/oncall/var/log/uwsgi
+
+        - name: vector
+          image: timberio/vector:0.43.X-alpine
+          env:
+            - name: ENV
+              value: "dev"
+          args: ["--config", "/etc/vector/vector.toml"]
+          resources:
+            requests:
+              cpu: "200m"
+              memory: "256Mi"
+            limits:
+              cpu: "400m"
+              memory: "512Mi"
+          volumeMounts:
+            - name: nginx-logs
+              mountPath: /home/oncall/var/log/nginx
+            - name: uwsgi-logs
+              mountPath: /home/oncall/var/log/uwsgi
+            - name: vector-config
+              mountPath: /etc/vector
+
+      volumes:
+        - name: oncall-config
+          configMap:
+            name: oncall
+        - name: vector-config
+          configMap:
+            name: vector-config
+        - name: nginx-logs
+          emptyDir: {}
+        - name: uwsgi-logs
+          emptyDir: {}
