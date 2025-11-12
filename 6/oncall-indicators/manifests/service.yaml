@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: oncall-indicators
+  labels:
+    app.kubernetes.io/name: oncall-indicators
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "9200"
+    prometheus.io/path: "/metrics"
+spec:
+  selector:
+    app: oncall-indicators
+  ports:
+    - protocol: TCP
+      port: 9200
+      targetPort: 9200
+  type: ClusterIP

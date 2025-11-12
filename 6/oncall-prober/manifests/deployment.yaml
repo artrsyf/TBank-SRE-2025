@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: oncall-prober
+  labels:
+    app.kubernetes.io/name: oncall-prober
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: oncall-prober
+  template:
+    metadata:
+      labels:
+        app: oncall-prober
+    spec:
+      containers:
+      - name: oncall-prober
+        image: artrsyf/sre-oncall-prober:1.0
+        ports:
+        - containerPort: 9110
+        env:
+        - name: PROBE_TARGETS
+          value: "http://oncall:8080/healthcheck"
+        - name: PROBE_INTERVAL
+          value: "15"
+        - name: PROBE_TIMEOUT
+          value: "5"
+        - name: METRICS_PORT
+          value: "9110"
+        - name: LOG_LEVEL
+          value: "INFO"
+        readinessProbe:
+          httpGet:
+            path: /metrics
+            port: 9110
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        livenessProbe:
+          httpGet:
+            path: /metrics
+            port: 9110
+          initialDelaySeconds: 15
+          periodSeconds: 20
+        resources:
+          requests:
+            cpu: "200m"
+            memory: "256Mi"
+          limits:
+            cpu: "400m"
+            memory: "512Mi"

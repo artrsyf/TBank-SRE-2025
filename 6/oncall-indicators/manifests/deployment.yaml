@@ -1,0 +1,60 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: oncall-indicators
+  labels:
+    app.kubernetes.io/name: oncall-indicators
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: oncall-indicators
+  template:
+    metadata:
+      labels:
+        app: oncall-indicators
+    spec:
+      containers:
+      - name: oncall-indicators
+        image: artrsyf/sre-oncall-indicators:1.0
+        ports:
+        - containerPort: 9200
+        env:
+        - name: PROM_URL
+          value: "https://sage.sre-ab.ru/mage/api/search"
+        - name: SAGE_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: sage-credentials
+              key: token
+        - name: SAGE_SOURCE
+          value: "oncall_indicators"
+        - name: SAGE_GROUP
+          value: "ab1_fadeev"
+        - name: SAGE_SERVICE
+          value: "oncall-prober"
+        - name: SLO_LATENCY
+          value: "1.0"
+        - name: PROBE_TARGETS
+          value: "http://oncall:8080/healthcheck"
+        - name: LOG_LEVEL
+          value: "INFO"
+        readinessProbe:
+          httpGet:
+            path: /sla
+            port: 9200
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        livenessProbe:
+          httpGet:
+            path: /metrics
+            port: 9200
+          initialDelaySeconds: 15
+          periodSeconds: 20
+        resources:
+          requests:
+            cpu: "200m"
+            memory: "256Mi"
+          limits:
+            cpu: "400m"
+            memory: "512Mi"
