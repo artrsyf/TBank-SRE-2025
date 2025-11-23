@@ -1,0 +1,66 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage[russian]{babel}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage[a4paper, left=20mm, right=20mm, top=20mm, bottom=20mm]{geometry}
+
+\begin{document}
+
+\section*{Формула подсчёта SLA сервиса}
+
+\vspace{0.5cm}
+
+\textbf{Обозначения и параметры:}
+
+\begin{itemize}
+    \item \( U \) - \textbf{Средний процент доступности} (availability), измеряемый как доля времени, когда сервис отвечает на проверки работоспособности (пробы, \textit{probe\_up}):
+    \[
+    U = \text{среднее значение } \left( \text{probe\_up} \right) \times 100\%
+    \]
+    Здесь \textit{probe\_up} - бинарный индикатор, который равен 1, если сервис доступен и отвечает на проверку, и 0, если нет. Среднее берётся за последний период (например, 30 минут).
+    
+    \item \( S \) - \textbf{Процент успешных запросов} (success ratio):
+    \[
+    S = \left( 1 - \frac{\sum \text{ошибочные запросы}}{\sum \text{всех запросов}} \right) \times 100\%
+    \]
+    Этот показатель отражает долю корректно обработанных запросов к сервису за выбранный период (например, последние 5 минут). Ошибочные запросы учитывают любые виды ошибок на уровне обработки.
+    
+    \item \( \mathrm{avgLatency} \) - \textbf{99-процентный перцентиль времени отклика} сервиса, то есть значение времени ответа, которое не превышает 99\% всех запросов.
+    
+    \item \( \mathrm{SLO_{latency}} \) - \textbf{Целевой порог времени отклика} (Service Level Objective по латентности), установленный для сервиса. Например, 0.5 секунды.
+    
+    \item \( L \) - \textbf{Показатель соответствия времени отклика SLO} (latency SLO ratio), выраженный в процентах:
+    \[
+    L = 
+    \begin{cases}
+    100, & \text{если } \mathrm{avgLatency} \leq \mathrm{SLO_{latency}} \\
+    100 \times \frac{\mathrm{SLO_{latency}}}{\mathrm{avgLatency}}, & \text{если } \mathrm{avgLatency} > \mathrm{SLO_{latency}}
+    \end{cases}
+    \]
+    То есть, если сервис отвечает быстрее или ровно в целевое время, показатель равен 100\%. Если время ответа выше цели, показатель снижается пропорционально.
+\end{itemize}
+
+\vspace{0.5cm}
+
+\textbf{Итоговая формула SLA:}
+
+Общий показатель SLA для сервиса рассчитывается как среднее арифметическое трёх вышеописанных метрик:
+
+\[
+\boxed{
+\mathrm{SLA} = \frac{U + S + L}{3}
+}
+\]
+
+где
+
+\begin{itemize}
+    \item \( U \) - средний процент доступности,
+    \item \( S \) - процент успешных запросов,
+    \item \( L \) - процент соответствия целевому времени отклика.
+\end{itemize}
+
+\vspace{0.5cm}
+
+\end{document}
