@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deployment-strategies
+  labels:
+    app: my-app
+    version: "v1.0.0"
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: my-app
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      annotations:
+        sage/group: "ab1_fadeev"
+      labels:
+        app: my-app
+        version: "v1.0.0"
+    spec:
+      containers:
+      - name: deployment-strategies
+        image: containersol/k8s-deployment-strategies:latest
+        ports:
+        - name: http
+          containerPort: 8080
+        - name: metrics
+          containerPort: 9101
+        resources:
+            requests:
+              cpu: "200m"
+              memory: "256Mi"
+            limits:
+              cpu: "400m"
+              memory: "512Mi"
+        env:
+        - name: VERSION
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.labels['version']
